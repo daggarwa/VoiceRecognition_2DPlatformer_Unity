@@ -9,7 +9,7 @@ public class Gun : MonoBehaviour
 
 	private PlayerControl playerCtrl;		// Reference to the PlayerControl script.
 	private Animator anim;					// Reference to the Animator component.
-
+	public bool shoot = false;
 
 	void Awake()
 	{
@@ -22,8 +22,9 @@ public class Gun : MonoBehaviour
 	void Update ()
 	{
 		// If the fire button is pressed...
-		if(Input.GetButtonDown("Fire1"))
+		if(Input.GetButtonDown("Fire1") || shoot)
 		{
+			shoot = false;
 			// ... set the animator Shoot trigger parameter and play the audioclip.
 			anim.SetTrigger("Shoot");
 			GetComponent<AudioSource>().Play();

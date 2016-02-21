@@ -10,17 +10,21 @@ public class UDP_RecoServer : MonoBehaviour
 {
 	Thread receiveThread;
 	UdpClient client;
-	public int port = 26000; // DEFAULT UDP PORT !!!!! THE QUAKE ONE ;)
+	public int port = 26000; 
 	string strReceiveUDP = "";
 	string LocalIP = String.Empty;
 	string hostname;
+	PlayerControl playerControl;
+	Gun gun;
 
 	public void Start()
 	{
 		Application.runInBackground = true;
 		init();  
+		playerControl = GetComponent<PlayerControl> (); 
+		gun = this.transform.Find ("Gun").GetComponent<Gun> ();
 	}
-	// init
+
 	private void init()
 	{
 		receiveThread = new Thread( new ThreadStart(ReceiveData));
@@ -45,11 +49,32 @@ public class UDP_RecoServer : MonoBehaviour
 				IPEndPoint anyIP = new IPEndPoint(IPAddress.Broadcast, port);
 				byte[] data = client.Receive(ref anyIP);
 				strReceiveUDP = Encoding.UTF8.GetString(data);
-				// ***********************************************************************
-				// Simple Debug. Must be replaced with SendMessage for example.
-				// ***********************************************************************
+
 				Debug.Log(strReceiveUDP);
-				// ***********************************************************************
+
+				if (strReceiveUDP.Equals("Jump")) {
+					Debug.Log("Inside Jump");
+					playerControl.jump = true;
+				}
+				else if(strReceiveUDP.Equals("Right") )
+				{
+					Debug.Log("Inside Right");
+					playerControl.updateExternForce(true);
+
+				}
+				else if(strReceiveUDP.Equals("Left") )
+				{
+					Debug.Log("Inside Left");
+					playerControl.updateExternForce(false);
+
+				}
+				else if(strReceiveUDP.Equals("Shoot") )
+				{
+					Debug.Log("Inside Shoot");
+					gun.shoot = true;
+				}
+
+
 			}
 			catch (Exception err)
 			{

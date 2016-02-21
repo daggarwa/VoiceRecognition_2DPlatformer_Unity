@@ -17,12 +17,14 @@ public class PlayerControl : MonoBehaviour
 	public float tauntProbability = 50f;	// Chance of a taunt happening.
 	public float tauntDelay = 1f;			// Delay for when the taunt should happen.
 
-
+	private float speedExtern=0.0f;
+	private bool isRunning = false;
 	private int tauntIndex;					// The index of the taunts array indicating the most recent taunt.
 	private Transform groundCheck;			// A position marking where to check if the player is grounded.
 	private bool grounded = false;			// Whether or not the player is grounded.
 	private Animator anim;					// Reference to the player's animator component.
-
+	bool startCoroutine = false;
+	bool direction;
 
 	void Awake()
 	{
@@ -31,9 +33,20 @@ public class PlayerControl : MonoBehaviour
 		anim = GetComponent<Animator>();
 	}
 
+	void Start () {
+	}
 
 	void Update()
 	{
+		if (startCoroutine) {
+			Debug.LogError ("trying to start coroutine");
+			startCoroutine = false;
+			if (isRunning) {
+				StopCoroutine ("changeForceGaussain");
+			} 
+			StartCoroutine ("changeForceGaussain");
+		}
+
 		// The player is grounded if a linecast to the groundcheck position hits anything on the ground layer.
 		grounded = Physics2D.Linecast(transform.position, groundCheck.position, 1 << LayerMask.NameToLayer("Ground"));  
 
@@ -42,11 +55,45 @@ public class PlayerControl : MonoBehaviour
 			jump = true;
 	}
 
+	public void updateExternForce ( bool value) {
+		Debug.LogError ("Updating external force");
+		direction = value;
+		startCoroutine = true;
+	}
+
+	private IEnumerator changeForceGaussain() {
+		isRunning = true;
+		Debug.LogError ("Inside coroutine");
+		if (speedExtern.Equals (0.0f)) {
+			speedExtern = 0.1f;
+
+			if (!direction) {
+				speedExtern *= -1;
+			}
+		}
+
+		for (int i = 0; i < 30; i++) {
+			speedExtern *= 1.05f;
+			yield return new WaitForEndOfFrame ();
+		}
+
+		for (int i = 0; i < 10; i++) {
+			speedExtern *= .65f;
+			yield return new WaitForEndOfFrame ();
+		}
+
+		speedExtern = 0;
+		isRunning = false;
+	}
 
 	void FixedUpdate ()
 	{
 		// Cache the horizontal input.
 		float h = Input.GetAxis("Horizontal");
+
+//		Debug.LogError ("Speed Comparison " + h + " , " + speedExtern);
+		if ((speedExtern > 0 && speedExtern > h) || (speedExtern < 0 && speedExtern < h))
+			h = speedExtern;
 
 		// The Speed animator parameter is set to the absolute value of the horizontal input.
 		anim.SetFloat("Speed", Mathf.Abs(h));
